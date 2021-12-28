@@ -27,7 +27,7 @@ const roles = [
   { id: 0, value: "User" },
   { id: 1, value: "Doctor" },
   { id: 2, value: "Patient" },
-  { id: 3, value: "Relative" },
+  { id: 3, value: "Caretaker" },
 ];
 
 const genders = [
