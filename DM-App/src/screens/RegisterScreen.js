@@ -44,8 +44,6 @@ const RegisterScreen = ({ navigation }) => {
   const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
   const [role, setRole] = useState("Your Role?");
   const [isLoading, setIsLoading] = useState(false);
   const [questionModalVisible, setQuestionModalVisible] = useState(false);
@@ -53,29 +51,10 @@ const RegisterScreen = ({ navigation }) => {
   const [genderModalVisible, setGenderModalVisible] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-  const [securityQuestions, setSecurityQuestions] = useState([]);
 
   //set current date in the calendar
   const [selectedDate, setSelectedDate] = useState("");
   const [datePick, setDatePick] = useState(false);
-
-  //get security questions
-  const getSecurityQuestions = async () => {
-    Axios.get(
-      "https://digital-menschen.herokuapp.com/accounts/security-questions/"
-    )
-      .then((res) => {
-        console.log(res.data.security_questions);
-        setSecurityQuestions(res.data.security_questions);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  useEffect(() => {
-    getSecurityQuestions();
-  }, []);
 
   //alert handler
   const alertHandler = (alert) => {
@@ -95,8 +74,7 @@ const RegisterScreen = ({ navigation }) => {
       confirmPassword == "" ||
       (role === "Patient" && selectedDate == "") ||
       gender == "" ||
-      role == "" ||
-      answer == ""
+      role == ""
     ) {
       alertHandler("Fill all the fields");
     } else if (reg.test(email) === false) {
@@ -111,12 +89,13 @@ const RegisterScreen = ({ navigation }) => {
           email: email.toLowerCase(),
           username: username,
           first_name: firstName,
-          date_of_birth: selectedDate,
+          date_of_birth:
+            selectedDate !== ""
+              ? selectedDate
+              : moment(new Date()).format("DD-MM-YYYY"),
           last_name: lastName,
           password: password,
           password2: confirmPassword,
-          security_question: question,
-          security_answer: answer.toLowerCase(),
           role: role.toLowerCase(),
           gender: gender.toLowerCase(),
         },
@@ -143,11 +122,6 @@ const RegisterScreen = ({ navigation }) => {
           console.log("Error", e);
         });
     }
-  };
-
-  const questionPressHandler = (_value) => {
-    setQuestion(_value);
-    setQuestionModalVisible(false);
   };
 
   const rolePressHandler = (_value) => {
@@ -328,30 +302,6 @@ const RegisterScreen = ({ navigation }) => {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.emailInput,
-                { alignItems: "center", justifyContent: "center" },
-              ]}
-              activeOpacity={0.6}
-              onPress={setQuestionModalVisible.bind(this, true)}
-            >
-              <Text
-                style={{
-                  fontSize: RFPercentage(1.8),
-                  color: color.primaryColor,
-                }}
-              >
-                {question ? question : "Favorite Question"}
-              </Text>
-            </TouchableOpacity>
-            <TextInput
-              style={styles.emailInput}
-              placeholder="Answer"
-              value={answer}
-              onChangeText={(text) => setAnswer(text)}
-            />
-
             <ButtonComponent
               text="Register"
               isLoading={false}
@@ -361,31 +311,6 @@ const RegisterScreen = ({ navigation }) => {
           </View>
         </TouchableWithoutFeedback>
 
-        <Modal
-          visible={questionModalVisible}
-          setVisible={setQuestionModalVisible}
-        >
-          <View style={styles.modalView}>
-            {securityQuestions?.map((item, index) => (
-              <TouchableOpacity
-                key={`question${index}`}
-                style={styles.item}
-                activeOpacity={0.8}
-                onPress={questionPressHandler.bind(this, item.question)}
-              >
-                <Text
-                  style={{
-                    fontSize: RFPercentage(1.8),
-                    marginTop: 5,
-                    color: color.primaryColor,
-                  }}
-                >
-                  {item.question}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Modal>
         <Modal visible={roleModalVisible} setVisible={setRoleModalVisible}>
           <View style={styles.modalView}>
             {roles.slice(1, 4).map((item, index) => (

@@ -57,7 +57,7 @@ export default VerifyScreen = ({ route, navigation }) => {
           setIsLoading(false);
           const { status, message } = response.data;
           if (status) {
-            alert("Successfully registered!");
+            alertHandler("You have been successfully registered!");
             navigation.navigate("Login");
           } else {
             alertHandler(message);
@@ -105,7 +105,7 @@ export default VerifyScreen = ({ route, navigation }) => {
         <TextInput
           style={styles.emailInput}
           placeholder="Enter code"
-          keyboardType="number-pad"
+          keyboardType="phone-pad"
           value={code}
           onChangeText={(text) => setCode(text)}
         />

@@ -6,7 +6,7 @@ import {
   View,
   Keyboard,
   TouchableWithoutFeedback,
-  TouchableOpacity,
+  ActivityIndicator,
   Image,
   Dimensions,
 } from "react-native";
@@ -24,11 +24,8 @@ const questions = [
 ];
 
 export default ForgetPasswordScreen = ({ navigation }) => {
-  const [question, setQuestion] = useState("Favorite color?");
-  const [answer, setAnswer] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [questionModalVisible, setQuestionModalVisible] = useState(false);
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -43,26 +40,31 @@ export default ForgetPasswordScreen = ({ navigation }) => {
     Keyboard.dismiss();
 
     let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
-    if (email == "" || answer == "") {
+    if (email == "") {
       alertHandler("Fill all fields");
     } else if (reg.test(email) === false) {
       alertHandler("Email is not valid");
     } else {
       setIsLoading(true);
-      console.log(email, question, answer);
-      Axios.post("https://minhalapp.herokuapp.com/index/forget_pass/", {
-        email: email.toLowerCase(),
-        security_question: question,
-        security_answer: answer.toLowerCase(),
-      })
+      Axios.post(
+        "https://digital-menschen.herokuapp.com/accounts/resend-verification-code/",
+        {
+          email: email.toLowerCase(),
+        }
+      )
         .then((response) => {
           setIsLoading(false);
           console.log(response.data);
-          const { status, message, data } = response.data;
+          const { status, message } = response.data;
           if (status) {
-            navigation.navigate("ChangePassword", {
-              email,
-            });
+            alertHandler("Verification code has been sent to your email.");
+            let timer = setTimeout(() => {
+              clearTimeout(timer);
+              setShowAlert(false);
+              navigation.navigate("ChangePassword", {
+                email,
+              });
+            }, 3000);
           } else {
             alertHandler(message);
           }
@@ -74,30 +76,20 @@ export default ForgetPasswordScreen = ({ navigation }) => {
     }
   };
 
-  //get user details
-  const getDetails = () => {
-    Axios.get("https://digital-menschen.herokuapp.com/accounts/user-details/", {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token 9f14ff08aa6cead06c0b9bc7dd63297569491326`,
-      },
-    })
-      .then((res) => {
-        console.log("RESPONSE ", res);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-  };
-
-  useEffect(() => {
-    getDetails();
-  }, []);
-
-  const questionPressHandler = (_value) => {
-    setQuestion(_value);
-    setQuestionModalVisible(false);
-  };
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: color.secondaryColor,
+        }}
+      >
+        <ActivityIndicator size={24} color={color.primaryColor} />
+      </View>
+    );
+  }
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -125,63 +117,12 @@ export default ForgetPasswordScreen = ({ navigation }) => {
           onChangeText={(text) => setEmail(text)}
         />
 
-        <TouchableOpacity
-          style={[
-            styles.emailInput,
-            { alignItems: "center", justifyContent: "center" },
-          ]}
-          activeOpacity={0.6}
-          onPress={setQuestionModalVisible.bind(this, true)}
-        >
-          <Text
-            style={{
-              fontSize: RFPercentage(1.8),
-              color: color.primaryColor,
-            }}
-          >
-            {question ? question : "Favorite Question"}
-          </Text>
-        </TouchableOpacity>
-
-        <TextInput
-          style={styles.emailInput}
-          placeholder="Enter answer"
-          value={answer}
-          onChangeText={(text) => setAnswer(text)}
-        />
-
         <ButtonComponent
           text="Submit"
           isLoading={false}
           clickHandler={submitHandler}
           width={Dimensions.get("window").width / 1.3}
         />
-
-        <Modal
-          visible={questionModalVisible}
-          setVisible={setQuestionModalVisible}
-        >
-          <View style={styles.modalView}>
-            {questions.map((item, index) => (
-              <TouchableOpacity
-                key={`question${index}`}
-                style={styles.item}
-                activeOpacity={0.8}
-                onPress={questionPressHandler.bind(this, item.value)}
-              >
-                <Text
-                  style={{
-                    fontSize: RFPercentage(1.8),
-                    marginTop: 5,
-                    color: color.primaryColor,
-                  }}
-                >
-                  {item.value}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Modal>
       </View>
     </TouchableWithoutFeedback>
   );
